@@ -58,7 +58,7 @@ regd_users.post("/login", (req,res) => {
 // Add or modify a book review with isbn based on registered user
 regd_users.put("/auth/review/:isbn", (req, res) => {
     const isbn = req.params.isbn;
-    const username = req.session.username;
+    const username = req.session.authorization.username;
     const review = req.query.review;
 
     if (username && review && isbn) {
@@ -69,55 +69,31 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
 
             books[isbn].reviews[username] = review;
             
-            return res.status(200).json({ message: "The review for the book with ISBN " + isbn + " has been added."});
+            return res.status(200).json({ message: "The review for the book with ISBN " + isbn + " has been added/updated."});
         } else {
             return res.status(404).json({ message: "Book with ISBN " + isbn + " not found." });
         }
     }
 
-    return res.status(400).json({ message: "Invalid request. Make sure to include username, review, and isbn." });
+    return res.status(400).json({ message: "Invalid request. Make sure to include ISBN number and review." });
 
 });
-        // const isbn = req.params.isbn;
-        // const review = req.query.review;
 
-        // let filtered_isbn = null;
-        // for(let key in books) 
-        // {
-        //     if(books[key] === isbn) {
-        //         filtered_isbn = key;
-        //         break;
-        //     }
-        // }
-        // let filtered_users = users.filter((user) => user.email === email);
-        // if(filtered_users.length > 0) {
-        // let filtered_user = filtered_users[0];
-        // let DOB = req.query.DOB;
-        // let firstName = req.query.firstName;
-        // let lastName = req.query.lastName;
-        // //if the DOB has changed
-        // if(DOB) {
-        //     filtered_user.DOB = DOB
-        // }
-        // if(firstName) {
-        //     filtered_user.firstName = firstName
-        // }
-        // if(lastName) {
-        //     filtered_user.lastName = lastName
-        // }
-
-        // users = users.filter((user) => user.email != email);
-        // users.push(filtered_user);
-        // res.send(`User with the email ${email} updated.`);
-        // }
-        // else {
-        // res.send("Unable to find customer");
-        // }
 //DELETE a review based on registered user
 regd_users.delete("/auth/review/:isbn",(req,res) => {
     const isbn = req.params.isbn;
-    //users = users.filter((user) => user.email != email);
-    //res.send(`User with the email ${email} deleted.`);
+    const username = req.session.authorization.username;
+
+    if(username && isbn) {
+        if(books[isbn] && books[isbn].reviews && books[isbn].reviews[username]) {
+            delete books[isbn].reviews[username];
+            return res.status(200).json({ message: "The review for the book with ISBN " + isbn + " from user " + username + " has been deleted."});
+        }
+        else {
+            return res.status(404).json({message: "Review for book with ISBN " + isbn + " not found. "});
+        }
+    }
+    return res.status(400).json({message: "Invalid request. Make sure to include ISBN number and ensure you're logged in."});
 })
 
 module.exports.authenticated = regd_users;
